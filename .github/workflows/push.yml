@@ -1,0 +1,46 @@
+name: 每日早晚安推送
+
+on:
+  schedule:
+    # 🕒 设定为 UTC 23:30 (即北京时间 07:30 发送早安)
+    - cron: '30 23 * * *'
+    
+    # 🕒 设定为 UTC 14:00 (即北京时间 23:00 发送晚安)
+    - cron: '0 15 * * *'
+    
+  workflow_dispatch: # 允许手动点击测试
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Push Script
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          USER_ID: ${{ secrets.USER_ID }}
+          TEMPLATE_MORNING: ${{ secrets.TEMPLATE_MORNING }}
+          TEMPLATE_NIGHT: ${{ secrets.TEMPLATE_NIGHT }}
+          WEATHER_KEY: ${{ secrets.WEATHER_KEY }}
+          CITY_CODE: ${{ secrets.CITY_CODE }}
+          LOVE_START_DATE: ${{ secrets.LOVE_START_DATE }}
+          PET_START_DATE: ${{ secrets.PET_START_DATE }}
+        run: |
+          # 自动判断时间
+          HOUR=$(date -u +%H)
+          if [ $HOUR -lt 12 ]; then
+            python main.py morning
+          else
+            python main.py night
+          fi
